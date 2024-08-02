@@ -27,7 +27,12 @@
 #include <string>
 #include <unordered_map>
 #include <functional>
+#include <cstring>
+#include <fstream>
 
+#include "json.hpp"
+
+using json = nlohmann::json;
 using FunPtr = void(*) (int, char **);
 
 void FLE_ld(int argc, char *argv[]);
@@ -83,7 +88,57 @@ int main(int argc, char *argv[]) {
  * @param argv The input parameters.
  */
 void FLE_ld(int argc, char *argv[]) {
-    
+
+    std::string dest;
+    std::unordered_map<
+                        std::string, 
+                        std::vector<std::pair<std::string, std::string>>
+    > sections;
+
+    // 提取所有 section
+    for (int i = 0; i < argc; i++) {
+        if (!strcmp(argv[i], "-o")) continue;
+
+        if (i > 0 && strcmp(argv[i - 1], "-o")) {
+            // 提取链接输出文件名
+            dest = std::string(argv[i]);
+        } else {
+            std::ifstream f(argv[i]);
+            json j = json::parse(f);
+
+            assert(j["type"] == ".obj");
+
+            // 存储所有 section
+            for (json::iterator it = j.begin(); it != j.end(); ++it) {
+                if (it.key()[0] == '.') { // is a section
+                    std::vector<std::string> section_data = it.value();
+                    for (std::string &data : section_data) {
+                        auto item = std::make_pair(data.substr(0, data.find(':')), data.substr(data.find(':') + 1));
+                        sections[it.key()].push_back(item);
+                    }
+                }
+            }
+        }
+    } 
+
+    #ifdef DEBUG
+    std::cout << "===== sections =====" << std::endl;
+
+    for (auto &section : sections) {
+        std::cout << section.first << std::endl;
+
+        auto &item = section.second;
+        for (auto &it : item) {
+            std::cout << it.first << " " << it.second << std::endl;
+        }
+
+        std::cout << "=====" << std::endl;
+    }
+
+    std::cout << "===== sections end =====" << std::endl;
+    #endif
+
+
 }
 
 void FLE_exec(int argc, char *argv[]) {
