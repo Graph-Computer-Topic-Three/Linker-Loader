@@ -26,23 +26,6 @@ size_t strlen(const char *s) {
     return len;
 }
 
-char *strcpy(char *d, const char *s) {
-    char *r = d;
-    while (*s) {
-        *d++ = *s++;
-    }
-    *d = '\0';
-    return r;
-}
-
-char *strchr(const char *s, int c) {
-    for (; *s; s++) {
-        if (*s == c)
-            return (char *)s;
-    }
-    return NULL;
-}
-
 void print(const char *s, ...) {
     va_list ap;
     va_start(ap, s);
